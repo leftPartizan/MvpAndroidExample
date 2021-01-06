@@ -1,9 +1,12 @@
 package com.example.architecturebase
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.widget.Toast
+import androidx.annotation.NonNull
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.architecturebase.UseCases.UseCaseGetPosts
 import com.example.architecturebase.adapter.MainAdapter
 import com.example.architecturebase.databinding.ActivityMainBinding
 import com.example.architecturebase.network.IPostApi
@@ -17,97 +20,30 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MvpContract.IView {
 
-    companion object {
-        private const val REQUEST_TIMEOUT_SECONDS = 5L
-    }
+    private val presenter: MvpContract.IPresenter = MvpPresenter(this)
 
-    private val binding by lazy {
-        val bind = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(bind.root)
-        bind
-    }
-
-    private val mainAdapter = MainAdapter()
-
-    private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
-        .callTimeout(REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .build()
-
-    private val retrofit = Retrofit.Builder()
-        .baseUrl("https://jsonplaceholder.typicode.com")
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(okHttpClient)
-        .build()
-
-    private val postApi = retrofit.create(IPostApi::class.java)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding.mainRV.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = mainAdapter
-        }
-        binding.listSRL.isRefreshing = true
-        postApi.getPosts().enqueue(object : Callback<List<Post>> {
-            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
-                if (response.isSuccessful) {
-                    response.body()?.let { posts ->
-                        // logic starts
-                        val processedPosts = posts.filter {
-                            !it.title.startsWith("H")
-                        }.map {
-                            it.copy(title = it.title + "appendix")
-                        }.sortedBy {
-                            it.title
-                        }.subList(0, posts.size - 3)
-                        // logic ends
-                        mainAdapter.items = processedPosts
-                        binding.listSRL.isRefreshing = false
-                    }
-                }
-            }
+        presenter.setLayoutManagerWithAdapter()
 
-            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
-                Toast.makeText(this@MainActivity, t.message, Toast.LENGTH_SHORT).show()
-                t.printStackTrace()
-                binding.listSRL.isRefreshing = false
-            }
-        })
+        presenter.setListRefreshing()
 
-        binding.listSRL.setOnRefreshListener {
-            mainAdapter.items = emptyList()
+        presenter.getPosts()
 
-            postApi.getPosts().enqueue(object : Callback<List<Post>> {
-                override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
-                    if (response.isSuccessful) {
-                        response.body()?.let { posts ->
-                            // logic starts
-                            val processedPosts = posts.filter {
-                                !it.title.startsWith("H")
-                            }.map {
-                                it.copy(title = it.title + "appendix")
-                            }.sortedBy {
-                                it.title
-                            }.subList(0, posts.size - 3)
-                            // logic ends
-                            mainAdapter.items = processedPosts
-                            binding.listSRL.isRefreshing = false
-                        }
-                    }
-                }
-
-                override fun onFailure(call: Call<List<Post>>, t: Throwable) {
-                    Toast.makeText(this@MainActivity, t.message, Toast.LENGTH_SHORT).show()
-                    t.printStackTrace()
-                    binding.listSRL.isRefreshing = false
-                }
-            })
-        }
+        presenter.setListenerListRefresher()
     }
+
+    override fun showFailureLoadDataDialog(t: Throwable) {
+        Toast.makeText(this@MainActivity, t.message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun getLayoutManager(): LinearLayoutManager {
+        return LinearLayoutManager(this)
+    }
+
+
 }
