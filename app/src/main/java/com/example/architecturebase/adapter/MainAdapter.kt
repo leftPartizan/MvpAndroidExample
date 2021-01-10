@@ -26,13 +26,13 @@ class MainAdapter : RecyclerView.Adapter<MainAdapter.Holder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        Holder(
-            binding = PostViewBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
+            Holder(
+                    binding = PostViewBinding.inflate(
+                            LayoutInflater.from(parent.context),
+                            parent,
+                            false
+                    )
             )
-        )
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         holder.bind(items[position])

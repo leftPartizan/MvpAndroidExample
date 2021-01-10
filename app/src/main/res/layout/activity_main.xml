@@ -4,13 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/listSRL"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/mainRV"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        android:layout_height="match_parent"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>
